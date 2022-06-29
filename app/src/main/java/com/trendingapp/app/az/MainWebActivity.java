@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -58,6 +59,7 @@ import com.google.android.gms.ads.AdView;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -261,11 +263,11 @@ public class MainWebActivity extends AppCompatActivity {
         mwebView.getSettings().setUseWideViewPort(true);
         mwebView.getSettings().setDomStorageEnabled(true);
         mwebView.getSettings().setJavaScriptCanOpenWindowsAutomatically(true);
-        //mwebView.getSettings().setUserAgentString("Android Mozilla/5.0 AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30");
+        mwebView.getSettings().setUserAgentString("Android Mozilla/5.0 AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30");
         mwebView.getSettings().setAllowFileAccess(true);
         mwebView.getSettings().setAllowFileAccess(true);
         mwebView.getSettings().setAllowContentAccess(true);
-        mwebView.getSettings().setUserAgentString(getString(R.string.app_name));
+        //mwebView.getSettings().setUserAgentString("android");
         mwebView.getSettings().supportZoom();
 
 
@@ -729,165 +731,39 @@ public class MainWebActivity extends AppCompatActivity {
 
 
 
+        @Override
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
-            // do your handling codes here, which url is the requested url
-            // probably you need to open that url rather than redirect:
-            Log.e("weburl===",url);
-            // Toast.makeText(getApplicationContext(),url,Toast.LENGTH_SHORT).show();
-            if (url.startsWith("mailto:")) {
-                final Activity activity =          MainWebActivity.this;
-                if (activity != null) {
-                    MailTo mt = MailTo.parse(url);
-                    Intent i = newEmailIntent(activity, mt.getTo(), mt.getSubject(), mt.getBody(), mt.getCc());
-                    activity.startActivity(i);
-                    view.reload();
-                    return true;
-                }
-            }
+            if (url.startsWith("intent://")) {
+                try {
+                    Context context = view.getContext();
+                    Intent intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
 
+                    if (intent != null) {
+                        view.stopLoading();
 
+                        PackageManager packageManager = context.getPackageManager();
+                        ResolveInfo info = packageManager.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY);
+                        if (info != null) {
+                            context.startActivity(intent);
+                        } else {
+                            String fallbackUrl = intent.getStringExtra("browser_fallback_url");
+//                            view.loadUrl(fallbackUrl);
 
+                            // or call external broswer
+                            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(fallbackUrl));
+                            context.startActivity(browserIntent);
+                        }
 
-
-
-            PackageManager pm = getApplicationContext().getPackageManager();
-
-
-            if (url.startsWith("whatsapp://")) {
-
-
-                if(isPackageInstalled("com.whatsapp",pm)){
-
-                    view.getContext().startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
-
-
-                }else{
-                    // create an intent for Play Store
-
-                    final Uri uri = Uri.parse("market://details?id=com.whatsapp");
-                    final Intent goToMarket = new Intent(Intent.ACTION_VIEW, uri);
-                    @SuppressWarnings({"NewApi", "deprecation"})
-                    final int newDocumentFlag = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) ? Intent.FLAG_ACTIVITY_NEW_DOCUMENT : Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET;
-                    goToMarket.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY | newDocumentFlag | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
-
-                    try {
-                        // open Whatsapp listing in Play Store app
-                        startActivity(goToMarket);
-                    } catch (ActivityNotFoundException ex) {
-                        // open Whatsapp listing in browser
-                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://play.google.com/store/apps/details?id=com.whatsapp")));
+                        return true;
                     }
-
+                } catch (URISyntaxException e) {
+                        Log.e("asd", "Can't resolve intent://", e);
 
                 }
-                return true;
-
-            }else
-
-
-
-            if (url != null && (url.startsWith("https://www.instagram.com") || url.startsWith("http://instagram.com/") || url.startsWith("https://instagram.com/"))) {
-
-                view.stopLoading();
-                view.getContext().startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
-
-
-                Log.e("insta","lassan");
-
-                return false;
-
-            }else
-            if ((url.startsWith("https://www.linkedin.com"))) {
-
-                view.stopLoading();
-                view.getContext().startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
-
-
-                Log.e("insta","lassan");
-
-                return false;
-
-            }else
-            if ((url.startsWith("intent://play.app"))) {
-
-                view.stopLoading();
-                view.getContext().startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=com.moncoinshop.app.az")));
-
-
-
-                Log.e("insta","lassan");
-
-                return false;
-
-            }else
-            if (url.startsWith("tel:")) {
-                view.stopLoading();
-
-                view.getContext().startActivity(new Intent(Intent.ACTION_DIAL, Uri.parse(url)));
-
-
-                return true;
-            }else
-            if(url.startsWith("https://www.facebook.com/sharer") || url.startsWith("https://m.facebook.com/sharer")){
-
-
-                view.stopLoading();
-
-                view.getContext().startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
-
-                return false;
-            }else
-
-
-
-
-            if(url.startsWith("https://www.facebook.com") || url.startsWith("https://m.facebook.com")){
-
-                view.stopLoading();
-
-                view.getContext().startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
-
-                return false;
-            }else
-
-            if (url != null && (url.startsWith("https://www.facebook.com/") || url.startsWith("https://m.facebook.com/"))) {
-                view.stopLoading();
-
-                view.getContext().startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
-
-                return false;
-            }else
-            if (url != null && (url.startsWith("https://www.pinterest.com/") || url.startsWith("https://pinterest.com"))) {
-                view.stopLoading();
-
-                view.getContext().startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
-
-                return false;
-            }else
-            if (url != null && (url.startsWith("https://www.youtube.com/") || url.startsWith("https://m.youtube.com/"))) {
-                view.stopLoading();
-
-                view.getContext().startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
-
-                return false;
-            }else
-            if (url != null && (url.startsWith("https://twitter.com/") || url.startsWith("https://www.twitter.com/") || url.startsWith("https://mobile.twitter.com/"))) {
-                view.stopLoading();
-
-                view.getContext().startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
-
-                return false;
-            }else
-            {
-
-                view.loadUrl(url);
-
-                return false;
             }
 
-// then it is not handled by default action
+            return false;
         }
-
         private boolean isPackageInstalled(String packageName, PackageManager packageManager) {
             try {
                 packageManager.getPackageInfo(packageName, 0);

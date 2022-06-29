@@ -22,18 +22,16 @@
         android:layout_height="match_parent"
         android:id="@+id/im"
         android:visibility="visible"
-        android:background="#F8F8F8"
+        android:background="#000000"
         >
 
 
         <ImageView
             android:layout_width="@dimen/_150sdp"
             android:layout_height="@dimen/_150sdp"
-            android:src="@drawable/cap01"
-            android:layout_centerHorizontal="true"
+            android:layout_centerInParent="true"
             android:scaleType="fitCenter"
-            android:layout_centerVertical="true"
-            />
+            android:src="@drawable/ss2" />
 
 
 
